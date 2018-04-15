@@ -54,7 +54,8 @@ Button reloadBtn (RELOAD_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);			//Reload button
 Button magSzTogBtn (MAG_SZ_TOG_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);	//Magazine size toggle button, from Button lib
 
 void setup() {
-	
+	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);							//begin display with correct I2C address
+	display.clearDisplay();												//clear display of any jumk that might be on it
 }
 
 void loop() {
