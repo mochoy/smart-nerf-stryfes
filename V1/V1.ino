@@ -1,3 +1,16 @@
+/*********************************************************************
+Sketch for Arduino-powered Smart Stryfe V1
+
+Description and part links also in README:
+	- Features: IR Gate ammo counter, chronograph, reload detection, 
+		togglable magazine sizes, and PWM variable motor control
+	- Parts: Suild MOSFET board ($10), Artifact Red cage ($34), 
+		Worker High-Crush Wheels ($13), Fang ReVamped motors ($15)
+
+By Monty C, 04/15/18
+*********************************************************************/
+
+
 //libraries to include
 #include <Adafruit_SSD1306.h>					//import library for display driver
 #include <Adafruit_GFX.h>						//import library for display graphics
