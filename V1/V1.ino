@@ -1,6 +1,8 @@
 /*********************************************************************
 Sketch for Arduino-powered Smart Stryfe V1
 
+I don't care about 80 char
+
 Description and part links also in README:
 	- Features: IR Gate ammo counter, chronograph, reload detection, 
 		togglable magazine sizes, and PWM variable motor control
@@ -53,16 +55,17 @@ Button triggerBtn (TRIGGER_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);		//Trigger butt
 Button reloadBtn (RELOAD_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);			//Reload button, from Button lib
 Button magSzTogBtn (MAG_SZ_TOG_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);	//Magazine size toggle button, from Button lib
 
-byte magSizeArr[] = {5, 6, 10, 12, 15, 18, 20, 22, 25, 36, 0};  		//keep track of the magazine sizes
-byte currentMagSize = 0;  												//keep track of the current magazine size
-byte currentAmmo = magSizeArr[currentMagSize];    						//keep track of how much ammo there currently is
-byte maxAmmo = magSizeArr[currentMagSize];    							//keep track of what the max ammo is, for use when reloading 
+uint8_t magSizeArr[] = {5, 6, 10, 12, 15, 18, 20, 22, 25, 36, 0};  		//keep track of the magazine sizes
+uint8_t currentMagSize = 0;  											//keep track of the current magazine size
+uint8_t currentAmmo = magSizeArr[currentMagSize];    					//keep track of how much ammo there currently is
+uint8_t maxAmmo = magSizeArr[currentMagSize];    						//keep track of what the max ammo is, for use when reloading 
 
 float chronoReading = 123;												//keep track of chrono readings
 
 float voltage = 0;														//keep track of voltage from voltmeter
 float lastVoltage = 0;													//keep track of last voltage reading
 
+int motorVel = 0;														//keep track of motor velocity via PWM
 
 
 void setup() {
@@ -80,7 +83,7 @@ void updateDisplay() {
 
 	//display ammo counter values
 	display.setTextSize(6);												//set text size to print ammo
-	display.setCursor(30, 9);											//set cursor position to print ammo
+	display.setCursor(30, 8);											//set cursor position to print ammo
 	if (currentAmmo < 10) {												//if current ammo less than 10
 		display.print("0" + (String)currentAmmo);						//print current ammo with preceding 0
 	} else {															//if current ammo more than 10
@@ -90,12 +93,17 @@ void updateDisplay() {
 	display.setTextSize(1);												//set smaller text size for chrono and voltage readings
 
 	//display chrono reading
-	display.setCursor(5, 56);											//set cursor position to print chrono vals
+	display.setCursor(10, 56);											//set cursor position to print chrono vals
 	display.print((String)chronoReading + " fps");						//print chrono reading
 
 	//display voltage reading
-	display.setCursor(75, 56);											//set cursor position to print voltage vals
+	display.setCursor(78, 56);											//set cursor position to print voltage vals
 	display.print((String)voltage + " fps");							//print chrono reading
+
+	//display motor PWM bar 
+	uint8_t lineLength = 64 - motorVel * 4;								//calculate length of line to draw based on pot reading
+    display.drawLine(0, 63, 0, lineLength, WHITE);						//draw 1 line with desired length
+    display.drawLine(1, 63, 1, lineLength, WHITE);						//draw other line with desired length. 2 lines drew to make bar more visible
 
 
 	display.display();													//actually show all the stuff printed onto the display
