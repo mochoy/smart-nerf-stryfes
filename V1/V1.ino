@@ -77,10 +77,11 @@ void setup() {
 }
 
 void loop() {
-	updateDisplay();
+	changeMagSizes();														//change magazine sizes, if needed
+	updateDisplay();														//update display, if needed
 }
 
-void updateDisplay() {
+void updateDisplay() {														//function to deal with updating display
 	if (toUpdateDisplay) {													//make sure need to update display before update it
 		display.clearDisplay();												//clear display of any stuff from last display print
 		display.setTextColor(WHITE);										//set color to print stuff
@@ -116,3 +117,18 @@ void updateDisplay() {
 	}
 
 }
+
+void changeMagSizes () {													//function to deal with changing magazine sizes 
+	magSzTogBtn.read();														//read the magazine size toggle button's value
+	if (magSzTogBtn.wasPressed()) {											//if mag size toggle btn pressed
+	    currentMagSize = (currentMagSize < 									//cycle through mag sizes based on array
+	    	(sizeof(magSizeArr)/sizeof(magSizeArr[0]) - 1)) ? 				//make sure array doens't overflow
+	    	currentMagSize + 1 : 0;    
+
+	    maxAmmo = magSizeArr[currentMagSize];								//there's a new max ammo, because there's a new magazine size
+	    currentAmmo = maxAmmo;												//also reload
+
+	    toUpdateDisplay = true;												//data has been changed, update display to show data
+	}	
+}
+
