@@ -67,10 +67,13 @@ float lastVoltage = 0;													//keep track of last voltage reading
 
 int motorVel = 0;														//keep track of motor velocity via PWM
 
+uint8_t toUpdateDisplay = true;											//flag to update display. Don't want to update display every loop()	 
+
 
 void setup() {
 	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);							//begin display with correct I2C address
 	display.clearDisplay();												//clear display of any jumk that might be on it
+	updateDisplay();													//update display to print default values
 }
 
 void loop() {
@@ -78,35 +81,38 @@ void loop() {
 }
 
 void updateDisplay() {
-	display.clearDisplay();												//clear display of any stuff from last display print
-	display.setTextColor(WHITE);										//set color to print stuff
+	if (toUpdateDisplay) {													//make sure need to update display before update it
+		display.clearDisplay();												//clear display of any stuff from last display print
+		display.setTextColor(WHITE);										//set color to print stuff
 
-	//display ammo counter values
-	display.setTextSize(6);												//set text size to print ammo
-	display.setCursor(30, 8);											//set cursor position to print ammo
-	if (currentAmmo < 10) {												//if current ammo less than 10
-		display.print("0" + (String)currentAmmo);						//print current ammo with preceding 0
-	} else {															//if current ammo more than 10
-		display.print((String)currentAmmo);								//just print current ammo
+		//display ammo counter values
+		display.setTextSize(6);												//set text size to print ammo
+		display.setCursor(30, 8);											//set cursor position to print ammo
+		if (currentAmmo < 10) {												//if current ammo less than 10
+			display.print("0" + (String)currentAmmo);						//print current ammo with preceding 0
+		} else {															//if current ammo more than 10
+			display.print((String)currentAmmo);								//just print current ammo
+		}
+
+		display.setTextSize(1);												//set smaller text size for chrono and voltage readings
+
+		//display chrono reading
+		display.setCursor(10, 56);											//set cursor position to print chrono vals
+		display.print((String)chronoReading + " fps");						//print chrono reading
+
+		//display voltage reading
+		display.setCursor(78, 56);											//set cursor position to print voltage vals
+		display.print((String)voltage + " fps");							//print chrono reading
+
+		//display motor PWM bar 
+		uint8_t lineLength = 64 - motorVel * 4;								//calculate length of line to draw based on pot reading
+	    display.drawLine(0, 63, 0, lineLength, WHITE);						//draw 1 line with desired length
+	    display.drawLine(1, 63, 1, lineLength, WHITE);						//draw other line with desired length. 2 lines drew to make bar more visible
+
+
+		display.display();													//actually show all the stuff printed onto the display
+
+		toUpdateDisplay = false;											//display just updated, next update when data change
 	}
-
-	display.setTextSize(1);												//set smaller text size for chrono and voltage readings
-
-	//display chrono reading
-	display.setCursor(10, 56);											//set cursor position to print chrono vals
-	display.print((String)chronoReading + " fps");						//print chrono reading
-
-	//display voltage reading
-	display.setCursor(78, 56);											//set cursor position to print voltage vals
-	display.print((String)voltage + " fps");							//print chrono reading
-
-	//display motor PWM bar 
-	uint8_t lineLength = 64 - motorVel * 4;								//calculate length of line to draw based on pot reading
-    display.drawLine(0, 63, 0, lineLength, WHITE);						//draw 1 line with desired length
-    display.drawLine(1, 63, 1, lineLength, WHITE);						//draw other line with desired length. 2 lines drew to make bar more visible
-
-
-	display.display();													//actually show all the stuff printed onto the display
-
 
 }
