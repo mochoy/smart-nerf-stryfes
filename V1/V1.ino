@@ -58,6 +58,7 @@ byte currentMagSize = 0;  												//keep track of the current magazine size
 byte currentAmmo = magSizeArr[currentMagSize];    						//keep track of how much ammo there currently is
 byte maxAmmo = magSizeArr[currentMagSize];    							//keep track of what the max ammo is, for use when reloading 
 
+float chronoReading = 123;												//keep track of chrono readings
 
 
 void setup() {
@@ -82,8 +83,13 @@ void updateDisplay() {
 		display.print((String)currentAmmo);								//just print current ammo
 	}
 
-	display.display();													//actually show all the stuff printed onto the display
+	display.setTextSize(1);												//set smaller text size for chrono and voltage readings
 
+	//display chrono reading
+	display.setCursor(5, 56);											//set cursor position to print chrono vals
+	display.print((String)chronoReading + " fps");						//print chrono reading
+
+	display.display();													//actually show all the stuff printed onto the display
 
 
 }
