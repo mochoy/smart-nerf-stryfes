@@ -78,6 +78,7 @@ void setup() {
 
 void loop() {
 	changeMagSizes();														//change magazine sizes, if needed
+	reload();																//reload, if needed
 	updateDisplay();														//update display, if needed
 }
 
@@ -130,5 +131,14 @@ void changeMagSizes () {													//function to deal with changing magazine s
 
 	    toUpdateDisplay = true;												//data has been changed, update display to show data
 	}	
+}
+
+void reload () {															//function to deal with reloading 
+	reloadBtn.read();														//read the value of the switch within the magwell
+	if (reloadBtn.wasPressed()) {											//if switch in magwell pressed
+		currentAmmo = maxAmmo;												//reset magazine size to max
+
+	    toUpdateDisplay = true;												//data has been changed, update display to show data
+	}
 }
 
