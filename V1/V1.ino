@@ -60,6 +60,10 @@ byte maxAmmo = magSizeArr[currentMagSize];    							//keep track of what the ma
 
 float chronoReading = 123;												//keep track of chrono readings
 
+float voltage = 0;														//keep track of voltage from voltmeter
+float lastVoltage = 0;													//keep track of last voltage reading
+
+
 
 void setup() {
 	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);							//begin display with correct I2C address
@@ -76,7 +80,7 @@ void updateDisplay() {
 
 	//display ammo counter values
 	display.setTextSize(6);												//set text size to print ammo
-	display.setCursor(30, 10);											//set cursor position to print ammo
+	display.setCursor(30, 9);											//set cursor position to print ammo
 	if (currentAmmo < 10) {												//if current ammo less than 10
 		display.print("0" + (String)currentAmmo);						//print current ammo with preceding 0
 	} else {															//if current ammo more than 10
@@ -88,6 +92,11 @@ void updateDisplay() {
 	//display chrono reading
 	display.setCursor(5, 56);											//set cursor position to print chrono vals
 	display.print((String)chronoReading + " fps");						//print chrono reading
+
+	//display voltage reading
+	display.setCursor(75, 56);											//set cursor position to print voltage vals
+	display.print((String)voltage + " fps");							//print chrono reading
+
 
 	display.display();													//actually show all the stuff printed onto the display
 
