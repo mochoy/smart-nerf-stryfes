@@ -53,11 +53,37 @@ Button triggerBtn (TRIGGER_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);		//Trigger butt
 Button reloadBtn (RELOAD_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);			//Reload button, from Button lib
 Button magSzTogBtn (MAG_SZ_TOG_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);	//Magazine size toggle button, from Button lib
 
+byte magSizeArr[] = {5, 6, 10, 12, 15, 18, 20, 22, 25, 36, 0};  		//keep track of the magazine sizes
+byte currentMagSize = 0;  												//keep track of the current magazine size
+byte currentAmmo = magSizeArr[currentMagSize];    						//keep track of how much ammo there currently is
+byte maxAmmo = magSizeArr[currentMagSize];    							//keep track of what the max ammo is, for use when reloading 
+
+
+
 void setup() {
 	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);							//begin display with correct I2C address
 	display.clearDisplay();												//clear display of any jumk that might be on it
 }
 
 void loop() {
-	
+	updateDisplay();
+}
+
+void updateDisplay() {
+	display.clearDisplay();												//clear display of any stuff from last display print
+	display.setTextColor(WHITE);										//set color to print stuff
+
+	//display ammo counter values
+	display.setTextSize(6);												//set text size to print ammo
+	display.setCursor(30, 10);											//set cursor position to print ammo
+	if (currentAmmo < 10) {												//if current ammo less than 10
+		display.print("0" + (String)currentAmmo);						//print current ammo with preceding 0
+	} else {															//if current ammo more than 10
+		display.print((String)currentAmmo);								//just print current ammo
+	}
+
+	display.display();													//actually show all the stuff printed onto the display
+
+
+
 }
