@@ -100,7 +100,12 @@ void updateDisplay() {														//function to deal with updating display
 
 		//display chrono reading
 		display.setCursor(10, 56);											//set cursor position to print chrono vals
-		display.print((String)chronoReading + " fps");						//print chrono reading
+		//validation of chrono vals
+		if (chronoReading > 0) {											//if chronoReading greater than 0, it's valid
+			display.print((String)chronoReading + " fps");					//print chrono reading as fps
+		} else {															//if chronoReading invalid
+			display.print("ERR");											//display error message for chrono
+		}
 
 		//display voltage reading
 		display.setCursor(78, 56);											//set cursor position to print voltage vals
