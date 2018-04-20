@@ -38,6 +38,7 @@ By Monty C, 04/15/18
 
 //macros for IR gate and chrono functionality
 #define IR_GATE_TRIP_VAL 60               									//value at which the IR gate is considered "blocked", or "tripped"
+#define IR_GATE_UNTRIP_VAL 90												//value at which IR gate no blocked, or "un-tripped"
 #define DART_LEGTH 0.23622													//length of dart, in feet
 
 //macros for voltmeter functionality
@@ -60,14 +61,16 @@ uint8_t currentMagSize = 0;  												//keep track of the current magazine si
 uint8_t currentAmmo = magSizeArr[currentMagSize];    						//keep track of how much ammo there currently is
 uint8_t maxAmmo = magSizeArr[currentMagSize];    							//keep track of what the max ammo is, for use when reloading 
 
-float chronoReading = 123;													//keep track of chrono readings
-
 float voltage = 0;															//keep track of voltage from voltmeter
 float lastVoltage = 0;														//keep track of last voltage reading
 
 uint8_t motorVel = 0;														//keep track of motor velocity via PWM
 uint8_t lastMotorVel = 0;													//keep track of last motor velocity
 double lastMotorVelCheckTime = 0;											//keep track of time for debouncing
+
+float chronoReading = 123;													//keep track of chrono readings
+double enterTime = -10;														//time when dart enters IR gate, in microsecodns. Set to -1 to indicate no chrono val
+double exitTime = -10;														//time when dart enters IR gate, in microseconds. Set to -1 to indicate no chrono val
 
 uint8_t toUpdateDisplay = true;												//flag to update display. Don't want to update display every loop()	 
 
@@ -79,6 +82,7 @@ void setup() {
 }
 
 void loop() {
+	chrono();																//count ammo and do chrono stuff, if needed
 	changeMagSizes();														//change magazine sizes, if needed
 	reload();																//reload, if needed
 	potInput();																//deal with potentieometer as input
@@ -161,5 +165,32 @@ void potInput() {															//function to deal with pot input changes
 	} else {																//if motor velocity didn't change or not time to check
 		lastMotorVel = (analogRead(POT_PIN)/4) - 1;							//set new last motor velocity to compare changes
 	}
+}
+
+void chrono() {																//function to deal with chronograph and ammo counter
+	uint8_t mappedIRRecReading = map(analogRead(IR_REC_PIN),				//value of IR receiver reading
+		0, 1023, 0, 100);
+	if (mappedIRRecReading > IR_GATE_TRIP_VAL) { 							//if IR gate tripped
+		if (enterTime == -10 && exitTime == -10) {							//if values indicate no chrono readings, so should be looking for one
+			enterTime = micros();											//store current time as time at which dart enters
+		}
+	} else if (mappedIRRecReading > IR_GATE_UNTRIP_VAL						//if IR gate un tripped, dart leaves IR gate
+		&& enterTime > 0) {													//make sure dart actually entered					
+		exitTime = micros();												//store current time as time at which dart exits
+		calculateChronoReadings();											//calculate chrono readings with recorded times
+		
+		ammoCounter();														//dart left IR gate, so a dart has been fired
+
+    	toUpdateDisplay = true;												//data has been changed, update display to show data
+
+	}
+}
+
+void calculateChronoReadings() {											//function to deal with calculating chrono readings
+
+}
+
+void ammoCounter() {														//function to deal with ammo counting
+
 }
 
