@@ -182,11 +182,19 @@ void chrono() {																//function to deal with chronograph and ammo coun
 		ammoCounter();														//dart left IR gate, so a dart has been fired
 
     	toUpdateDisplay = true;												//data has been changed, update display to show data
+	} else if (enterTime + 1000000 < micros()) {							//if 1 second passed but dart still hasn't exit, something went wrong	
+		chronoReading = -1;													//set to -1 so display knows to show error
+		resetChronoReadings();												//reset chrono readings so can chrono next shot
 
+    	toUpdateDisplay = true;												//data has been changed, update display to show data
 	}
 }
 
 void calculateChronoReadings() {											//function to deal with calculating chrono readings
+
+}
+
+void resetChronoReadings() {												//function to reset chrono readings so can calculate next chrono readings
 
 }
 
