@@ -128,7 +128,7 @@ void updateDisplay() {														//function to deal with updating display
 
 		//display voltage reading
 		display.setCursor(78, 56);											//set cursor position to print voltage vals
-		display.print((String)voltage + "V");							//print chrono reading
+		display.print((String)voltage + "V");								//print chrono reading
 
 		//display motor PWM bar 
 		uint8_t lineLength = 64 - motorVel * 4;								//calculate length of line to draw based on pot reading
