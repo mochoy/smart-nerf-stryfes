@@ -50,9 +50,13 @@ By Monty C, 04/15/18
 #define INVERT false														//don't enable invert button readings
 #define DB_TIME 25															//debouce time for button
 
+//macors for PWM functionality
+#define MOTOR_ACCEL_DELAY 50												//time (in milliseconds) to allow motors to rev to max speed
+
+
 Adafruit_SSD1306 display(OLED_RESET);										//display object instantiated from SSD1306 driver library
 
-Button triggerBtn (TRIGGER_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);			//Trigger button, from Button lib
+Button triggerBtn (TRIGGER_BTN_PIN, PU_ENABLE, true, DB_TIME);				//Trigger button, from Button lib
 Button reloadBtn (RELOAD_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);				//Reload button, from Button lib
 Button magSzTogBtn (MAG_SZ_TOG_BTN_PIN, PU_ENABLE, INVERT, DB_TIME);		//Magazine size toggle button, from Button lib
 
@@ -67,6 +71,8 @@ double lastVoltageCheckTime = 0;
 uint8_t motorVel = 0;														//keep track of motor velocity via PWM
 uint8_t lastMotorVel = 0;													//keep track of last motor velocity
 double lastMotorVelCheckTime = 0;											//keep track of time for debouncing
+uint8_t hasMotorsAccel = false;												//flag to check if motors have already acceletated
+double motorsAccelStartTime = 0;											//keep track of when motors started accel
 
 float chronoReading = 123;													//keep track of chrono readings
 double enterTime = -10;														//time when dart enters IR gate, in microsecodns. Set to -1 to indicate no chrono val
@@ -79,12 +85,15 @@ void setup() {
 	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);								//begin display with correct I2C address
 	display.clearDisplay();													//clear display of any jumk that might be on it
 	updateDisplay();														//update display to print default values
+
+	pinMode(MOTOR_OUT_PIN, OUTPUT);											//set MOTOR_OUT_PIN as an output pin 
 }
 
 void loop() {
 	changeMagSizes();														//change magazine sizes, if needed
 	reload();																//reload, if needed
 	potInput();																//deal with potentieometer as input
+	PWMFlywheels();															//PWM out to motors
 	voltmeter();															//deal with all voltmeter stuff
 	chrono();																//count ammo and do chrono stuff, if needed
 	updateDisplay();														//update display, if needed
@@ -166,6 +175,35 @@ void potInput() {															//function to deal with pot input changes
 	    toUpdateDisplay = true;												//data has been changed, update display to show data
 	} else {																//if motor velocity didn't change or not time to check
 		lastMotorVel = (analogRead(POT_PIN)/4) - 1;							//set new last motor velocity to compare changes
+	}
+}
+
+void PWMFlywheels() {														//function to deal with PWMing flywheel motors
+	triggerBtn.read();														//read trigger
+	if (triggerBtn.isPressed() && 											//if trigger pressed
+		analogRead(POT_PIN) > 50) {											//and if pot high enough value
+
+		if (!hasMotorsAccel) {												//if motors haven't accelerated
+			accelMotors();													//accel motors
+		} else {															//if motors have accelerated
+			analogWrite(MOTOR_OUT_PIN, analogRead(POT_PIN)/4);				//PWM motor
+		}
+	} else {																//if trigger not pressed
+		digitalWrite(MOTOR_OUT_PIN, false);									//turn off motor
+		hasMotorsAccel = false;												//reset hasMotorAccel for next trigger pull
+		motorsAccelStartTime = 0;											//reset motorsAccelStartTime for next trigger pull
+	}
+}
+
+void accelMotors () {														//function to deal with accelerating motors
+	if (motorsAccelStartTime == 0) {										//if motorAccelStartTime not set
+		motorsAccelStartTime = millis();									//set it to now, since it's going to start accelerating now
+	}
+
+	if (millis() < (motorsAccelStartTime + MOTOR_ACCEL_DELAY)) {			//if still need to accelerate motors
+		digitalWrite(MOTOR_OUT_PIN, HIGH);									//spin motors at full speed so they can accel
+	} else {																//if motors already done accel 
+		hasMotorsAccel = true;												//motors alread accelled
 	}
 }
 
