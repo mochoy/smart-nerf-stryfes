@@ -21,7 +21,7 @@ By Monty C, 04/15/18
 //analog input pins
 #define IR_REC_PIN 0														//pin for IR receiver                  	
 #define VOLTMETER_PIN 1														//pin for voltmeter
-#define POT_PIN 3															//pin for potentiometer
+#define POT_PIN 2															//pin for potentiometer
 
 //button output pins
 #define TRIGGER_BTN_PIN 4													//pin for trigger button
@@ -159,7 +159,8 @@ void potInput() {															//function to deal with pot input changes
 	if ( ((millis() + DB_TIME) > lastMotorVelCheckTime) && 					//make sure to check at certian intervals instead of every loop()
 		(motorVel != lastMotorVel) ) {										//make sure motor velocity changed
 
-		lastMotorVel = motorVel = (analogRead(POT_PIN)/4) - 1;				//set new motor velocity
+		lastMotorVel = motorVel = map(analogRead(POT_PIN), 					//set new motor velocity
+			0, 1010, 0, 16);				
 		lastMotorVelCheckTime = millis();									//reset time for checking motor vel
 
 	    toUpdateDisplay = true;												//data has been changed, update display to show data
