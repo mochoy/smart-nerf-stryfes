@@ -42,8 +42,8 @@ By Monty C, 04/15/18
 #define DART_LEGTH 0.23622													//length of dart, in feet
 
 //macros for voltmeter functionality
-#define R1 100000f															//reistance of R1 to calculate voltage division
-#define R2 10000f															//reistance of R2 to calculate voltage division
+#define R1 100000.0															//reistance of R1 to calculate voltage division
+#define R2 10000.0															//reistance of R2 to calculate voltage division
 
 //macros for button functionality
 #define PU_ENABLE false														//don't enable internal pullup resistors for buttons
@@ -62,7 +62,7 @@ uint8_t currentAmmo = magSizeArr[currentMagSize];    						//keep track of how m
 uint8_t maxAmmo = magSizeArr[currentMagSize];    							//keep track of what the max ammo is, for use when reloading 
 
 float voltage = 0;															//keep track of voltage from voltmeter
-float lastVoltage = 0;														//keep track of last voltage reading
+double lastVoltageCheckTime = 0;
 
 uint8_t motorVel = 0;														//keep track of motor velocity via PWM
 uint8_t lastMotorVel = 0;													//keep track of last motor velocity
@@ -82,10 +82,11 @@ void setup() {
 }
 
 void loop() {
-	chrono();																//count ammo and do chrono stuff, if needed
 	changeMagSizes();														//change magazine sizes, if needed
 	reload();																//reload, if needed
 	potInput();																//deal with potentieometer as input
+	voltmeter();															//deal with all voltmeter stuff
+	chrono();																//count ammo and do chrono stuff, if needed
 	updateDisplay();														//update display, if needed
 }
 
@@ -116,7 +117,7 @@ void updateDisplay() {														//function to deal with updating display
 
 		//display voltage reading
 		display.setCursor(78, 56);											//set cursor position to print voltage vals
-		display.print((String)voltage + " fps");							//print chrono reading
+		display.print((String)voltage + "V");							//print chrono reading
 
 		//display motor PWM bar 
 		uint8_t lineLength = 64 - motorVel * 4;								//calculate length of line to draw based on pot reading
@@ -164,6 +165,16 @@ void potInput() {															//function to deal with pot input changes
 	    toUpdateDisplay = true;												//data has been changed, update display to show data
 	} else {																//if motor velocity didn't change or not time to check
 		lastMotorVel = (analogRead(POT_PIN)/4) - 1;							//set new last motor velocity to compare changes
+	}
+}
+
+void voltmeter() {															//function to deal with voltmeter
+	if (lastVoltageCheckTime + 1000 < millis()) {							//only check once per second to keep Arduino from lagging
+		voltage = ((analogRead(VOLTMETER_PIN) * 5.0) 						//magial math/physics calculations to find voltage
+			/ 1024.0)/(R2/(R1+R2));
+		lastVoltageCheckTime = millis();									//set time so will check voltage again 1 second fron now
+
+    	toUpdateDisplay = true;												//data has been changed, update display to show data
 	}
 }
 
