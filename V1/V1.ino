@@ -12,6 +12,7 @@ Description and part links also in README:
 By Monty C, 04/15/18
 *********************************************************************/
 
+#include <SoftwareSerial.h>
 
 //libraries to include
 #include <Adafruit_SSD1306.h>												//import library for display driver
@@ -37,8 +38,8 @@ By Monty C, 04/15/18
 #define OLED_RESET 4														//OLED Reset pin
 
 //macros for IR gate and chrono functionality
-#define IR_GATE_TRIP_VAL 60               									//value at which the IR gate is considered "blocked", or "tripped"
-#define IR_GATE_UNTRIP_VAL 90												//value at which IR gate no blocked, or "un-tripped"
+#define IR_GATE_TRIP_VAL 80               									//value at which the IR gate is considered "blocked", or "tripped"
+#define IR_GATE_UNTRIP_VAL 30												//value at which IR gate no blocked, or "un-tripped"
 #define DART_LEGTH 0.23622													//length of dart, in feet
 
 //macros for voltmeter functionality
@@ -82,6 +83,8 @@ uint8_t toUpdateDisplay = true;												//flag to update display. Don't want 
 
 
 void setup() {
+	Serial.begin(9600);
+
 	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);								//begin display with correct I2C address
 	display.clearDisplay();													//clear display of any jumk that might be on it
 	updateDisplay();														//update display to print default values
@@ -101,6 +104,7 @@ void loop() {
 
 void updateDisplay() {														//function to deal with updating display
 	if (toUpdateDisplay) {													//make sure need to update display before update it
+		Serial.println("updaing");
 		display.clearDisplay();												//clear display of any stuff from last display print
 		display.setTextColor(WHITE);										//set color to print stuff
 
@@ -174,7 +178,7 @@ void potInput() {															//function to deal with pot input changes
 
 	    toUpdateDisplay = true;												//data has been changed, update display to show data
 	} else {																//if motor velocity didn't change or not time to check
-		lastMotorVel = (analogRead(POT_PIN)/4) - 1;							//set new last motor velocity to compare changes
+		lastMotorVel = map(analogRead(POT_PIN),0, 1010, 0, 16);				//set new last motor velocity to compare changes
 	}
 }
 
@@ -224,15 +228,21 @@ void chrono() {																//function to deal with chronograph and ammo coun
 		if (enterTime == -10 && exitTime == -10) {							//if values indicate no chrono readings, so should be looking for one
 			enterTime = micros();											//store current time as time at which dart enters
 		}
+		Serial.println("gate entered");
 	} else if (mappedIRRecReading > IR_GATE_UNTRIP_VAL						//if IR gate un tripped, dart leaves IR gate
-		&& enterTime > 0) {													//make sure dart actually entered					
+		&& enterTime > 0) {													//make sure dart actually entered		
+		Serial.println("gate exit");			
 		exitTime = micros();												//store current time as time at which dart exits
 		calculateChronoReadings();											//calculate chrono readings with recorded times
 		
 		ammoCounter();														//dart left IR gate, so a dart has been fired
 
     	toUpdateDisplay = true;												//data has been changed, update display to show data
-	} else if (enterTime + 1000000 < micros()) {							//if 1 second passed but dart still hasn't exit, something went wrong	
+	} else if (enterTime > -10 && 											//if dart entered gate
+		enterTime + 1000000 < micros()) {									//and 1 second passed but dart still hasn't exit, something went wrong	
+		
+		Serial.println("fasfasfd");
+
 		chronoReading = -1;													//set to -1 so display knows to show error
 		resetChronoReadings();												//reset chrono readings so can chrono next shot
 
@@ -249,6 +259,14 @@ void resetChronoReadings() {												//function to reset chrono readings so c
 }
 
 void ammoCounter() {														//function to deal with ammo counting
+	if (maxAmmo != 0 && currentAmmo < 99 && currentAmmo > 0) {  			//make sure ammo is less than 99 so doesnt overflow the display when not in count-up mode
+      currentAmmo--;    													//decrement ammo
+    } else if (maxAmmo == 0 && currentAmmo < 99) { 							//make sure ammo more than 0 so no negative numbers are displayed in count-up mode
+      currentAmmo++;    													//increment ammo
+    }
 
+	toUpdateDisplay = true;													//data has been changed, update display to show data
+
+	Serial.println("shot fired");
 }
 
