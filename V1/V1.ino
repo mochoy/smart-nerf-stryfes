@@ -40,7 +40,7 @@ By Monty C, 04/15/18
 //macros for IR gate and chrono functionality
 #define IR_GATE_TRIP_VAL 80               									//value at which the IR gate is considered "blocked", or "tripped"
 #define IR_GATE_UNTRIP_VAL 30												//value at which IR gate no blocked, or "un-tripped"
-#define DART_LEGTH 0.23622													//length of dart, in feet
+#define DART_LENGTH 0.23622													//length of dart, in feet
 
 //macros for voltmeter functionality
 #define R1 100000.0															//reistance of R1 to calculate voltage division
@@ -75,7 +75,7 @@ double lastMotorVelCheckTime = 0;											//keep track of time for debouncing
 uint8_t hasMotorsAccel = false;												//flag to check if motors have already acceletated
 double motorsAccelStartTime = 0;											//keep track of when motors started accel
 
-float chronoReading = 123;													//keep track of chrono readings
+float chronoReading = 0;													//keep track of chrono readings
 double enterTime = -10;														//time when dart enters IR gate, in microsecodns. Set to -1 to indicate no chrono val
 double exitTime = -10;														//time when dart enters IR gate, in microseconds. Set to -1 to indicate no chrono val
 
@@ -84,7 +84,6 @@ uint8_t toUpdateDisplay = true;												//flag to update display. Don't want 
 
 void setup() {
 	Serial.begin(9600);
-
 	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);								//begin display with correct I2C address
 	display.clearDisplay();													//clear display of any jumk that might be on it
 	updateDisplay();														//update display to print default values
@@ -104,7 +103,6 @@ void loop() {
 
 void updateDisplay() {														//function to deal with updating display
 	if (toUpdateDisplay) {													//make sure need to update display before update it
-		Serial.println("updaing");
 		display.clearDisplay();												//clear display of any stuff from last display print
 		display.setTextColor(WHITE);										//set color to print stuff
 
@@ -224,14 +222,15 @@ void voltmeter() {															//function to deal with voltmeter
 void chrono() {																//function to deal with chronograph and ammo counter
 	uint8_t mappedIRRecReading = map(analogRead(IR_REC_PIN),				//value of IR receiver reading
 		0, 1023, 0, 100);
+
 	if (mappedIRRecReading > IR_GATE_TRIP_VAL) { 							//if IR gate tripped
+		Serial.println("entered");
 		if (enterTime == -10 && exitTime == -10) {							//if values indicate no chrono readings, so should be looking for one
 			enterTime = micros();											//store current time as time at which dart enters
 		}
-		Serial.println("gate entered");
-	} else if (mappedIRRecReading > IR_GATE_UNTRIP_VAL						//if IR gate un tripped, dart leaves IR gate
+	} else if (mappedIRRecReading < IR_GATE_UNTRIP_VAL						//if IR gate un tripped, dart leaves IR gate
 		&& enterTime > 0) {													//make sure dart actually entered		
-		Serial.println("gate exit");			
+		Serial.println("exit");
 		exitTime = micros();												//store current time as time at which dart exits
 		calculateChronoReadings();											//calculate chrono readings with recorded times
 		
@@ -239,10 +238,9 @@ void chrono() {																//function to deal with chronograph and ammo coun
 
     	toUpdateDisplay = true;												//data has been changed, update display to show data
 	} else if (enterTime > -10 && 											//if dart entered gate
+		exitTime == -10 && 													//and dart hasn't exited gate
 		enterTime + 1000000 < micros()) {									//and 1 second passed but dart still hasn't exit, something went wrong	
 		
-		Serial.println("fasfasfd");
-
 		chronoReading = -1;													//set to -1 so display knows to show error
 		resetChronoReadings();												//reset chrono readings so can chrono next shot
 
@@ -251,11 +249,12 @@ void chrono() {																//function to deal with chronograph and ammo coun
 }
 
 void calculateChronoReadings() {											//function to deal with calculating chrono readings
-
+	chronoReading = (DART_LENGTH) / ((exitTime-enterTime)/1000000.0);		//calculate how fast dart going
+	resetChronoReadings();													//reset values to get ready for next shot
 }
 
 void resetChronoReadings() {												//function to reset chrono readings so can calculate next chrono readings
-
+	enterTime = exitTime = -10;												//reset exit and enter times to get ready for next shot
 }
 
 void ammoCounter() {														//function to deal with ammo counting
@@ -265,8 +264,8 @@ void ammoCounter() {														//function to deal with ammo counting
       currentAmmo++;    													//increment ammo
     }
 
-	toUpdateDisplay = true;													//data has been changed, update display to show data
+    Serial.println("shot fired");
 
-	Serial.println("shot fired");
+	toUpdateDisplay = true;													//data has been changed, update display to show data
 }
 
